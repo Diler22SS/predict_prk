@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Прогнозирование ПРК</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .form-container {
+            background: #fff;
+            padding: 20px 60px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            margin-top: 20px;
+            display: none; /* Скрываем все формы по умолчанию */
+        }
+        h2 {
+            color: #333;
+            font-size: 18px;
+        }
+        form {
+            display: block;
+        }
+        form p {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        form label {
+            text-align: left;
+        }
+        
+        form input[type=number] {
+            text-align: right;
+            width: 20%;
+        }
+        button {
+            background: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .loading {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+            display: none;
+        }
+        .result-container {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            display: none;
+        }
+        .result-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .result-error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h2>Выберите форму для прогнозирования ПРК</h2>
+    <div>
+        <button onclick="showForm('before-delivery')">1 этап (при беременности)</button>
+        <button onclick="showForm('at-delivery')">2 этап (во время родоразрешения)</button>
+    </div>
+
+    <!-- Форма для периода 1 -->
+    <div id="before-delivery-form-container" class="form-container">
+        <h3>Прогнозирование ПРК: 1 этап (при беременности)</h3>
+        <form id="before-delivery-form">
+            {% csrf_token %}
+            <p>
+                <label for="id_placenta_previa">Врастание плаценты, абс. (%)</label>
+            </p>
+                {{ before_delivery_form.placenta_previa }}
+            <p>
+                <label for="id_indications_for_caesarean_1">Предлежание плаценты, абс. (%)</label>
+            </p>
+                {{ before_delivery_form.indications_for_caesarean_1 }}
+            <p>
+                <label for="id_placenta_localization_3">Локализация плаценты по задней стенке, абс. (%)</label>
+            </p>
+                {{ before_delivery_form.placenta_localization_3 }}
+            <p>
+                <label for="id_delivery_2_0">Кесарево сечение, абс. (%)</label>
+            </p>
+                {{ before_delivery_form.delivery_2_0 }}
+            <p>
+                <label for="id_age">Возраст, лет</label>
+                {{ before_delivery_form.age }}
+            </p>
+            <p>
+                <label for="id_gestational_age">Срок беременности, недели</label>
+                {{ before_delivery_form.gestational_age }}
+            </p>
+            <p>
+                <label for="id_fibrinogen">Фибриноген, г/л</label>
+                {{ before_delivery_form.fibrinogen }}
+            </p>
+            <button type="submit" style="display: block; margin: 0 auto;">Отправить</button>
+        </form>
+        <div id="before-delivery-loading" class="loading">Загрузка...</div>
+        <div id="before-delivery-result" class="result-container"></div>
+    </div>
+
+    <!-- Форма для периода 2 -->
+    <div id="at-delivery-form-container" class="form-container">
+        <h3>Прогнозирование ПРК: 2 этап (во время родоразрешения)</h3>
+        <form id="at-delivery-form">
+            {% csrf_token %}
+            {{ at_delivery_form.as_p }}
+            <button type="submit" style="display: block; margin: 0 auto;">Отправить</button>
+        </form>
+        <div id="at-delivery-loading" class="loading">Загрузка...</div>
+        <div id="at-delivery-result" class="result-container"></div>
+    </div>
+
+    <script>
+        // Функция для показа нужной формы
+        function showForm(formType) {
+            document.getElementById('before-delivery-form-container').style.display = 'none';
+            document.getElementById('at-delivery-form-container').style.display = 'none';
+
+            if (formType === 'before-delivery') {
+                document.getElementById('before-delivery-form-container').style.display = 'block';
+            } else if (formType === 'at-delivery') {
+                document.getElementById('at-delivery-form-container').style.display = 'block';
+            }
+        }
+
+        // Показать первую форму по умолчанию
+        showForm('before-delivery');
+
+        // Обработчики отправки форм
+        document.getElementById('before-delivery-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            classifyBeforeDelivery();
+        });
+
+        document.getElementById('at-delivery-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            classifyAtDelivery();
+        });
+
+        // Функция для отображения состояния загрузки
+        function toggleLoading(id, show) {
+            document.getElementById(id).style.display = show ? 'block' : 'none';
+        }
+
+        // Функция для отображения результатов
+        function showResult(id, message, isError = false, isHigh = false) {
+            const resultDiv = document.getElementById(id);
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = message;
+            resultDiv.className = 'result-container ' + ((isHigh) ? 'result-error' : 'result-success');
+        }
+
+        // Функция классификации для периода 1 (до родоразрешения)
+        function classifyBeforeDelivery() {
+            const params = new URLSearchParams({
+                placenta_previa: document.querySelector('input[name="placenta_previa"]:checked')?.value,
+                indications_for_caesarean_1: document.querySelector('input[name="indications_for_caesarean_1"]:checked')?.value,
+                placenta_localization_3: document.querySelector('input[name="placenta_localization_3"]:checked')?.value,
+                delivery_2_0: document.querySelector('input[name="delivery_2_0"]:checked')?.value,
+                age: document.getElementById('id_age').value,
+                gestational_age: document.getElementById('id_gestational_age').value,
+                fibrinogen: document.getElementById('id_fibrinogen').value,
+            });
+
+            toggleLoading('before-delivery-loading', true);
+            showResult('before-delivery-result', '', false, false);
+
+            fetch(`/classify_prk_before_delivery/?${params.toString()}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("Ошибка сети");
+                    return response.json();
+                })
+                .then(data => {
+                    const probability = (data.probability[0][1] * 100).toFixed(2);
+                    const isHigh = probability >= 70;
+                    showResult('before-delivery-result', `Вероятность ПРК: ${probability}%`, false, isHigh);
+                })
+                .catch(() => {
+                    showResult('before-delivery-result', "Ошибка. Проверьте данные.", true, true);
+                })
+                .finally(() => {
+                    toggleLoading('before-delivery-loading', false);
+                });
+        }
+
+        // Функция классификации для периода 2 (во время родоразрешения)
+        function classifyAtDelivery() {
+            const params = new URLSearchParams({
+                bp_systolic: document.getElementById('id_bp_systolic').value,
+                heart_rate: document.getElementById('id_heart_rate').value,
+                hemoglobin: document.getElementById('id_hemoglobin').value,
+                hematocrit: document.getElementById('id_hematocrit').value,
+                thrombocytes: document.getElementById('id_thrombocytes').value,
+                prothrombin_index: document.getElementById('id_prothrombin_index').value,
+            });
+
+            toggleLoading('at-delivery-loading', true);
+            showResult('at-delivery-result', '', false, false);
+
+            fetch(`/classify_prk_at_delivery/?${params.toString()}`)
+                .then(response => {
+                    if (!response.ok) throw new Error("Ошибка сети");
+                    return response.json();
+                })
+                .then(data => {
+                    const probability = (data.probability[0][1] * 100).toFixed(2);
+                    const isHigh = probability >= 70;
+                    showResult('at-delivery-result', `Вероятность ПРК: ${probability}%`, false, isHigh);
+                })
+                .catch(() => {
+                    showResult('at-delivery-result', "Ошибка. Проверьте данные.", true, true);
+                })
+                .finally(() => {
+                    toggleLoading('at-delivery-loading', false);
+                });
+        }
+    </script>
+</body>
+</html>
