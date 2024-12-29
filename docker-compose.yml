@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: predict_prk_web
+    restart: always
+    volumes:
+      - ./static:/app/static
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    command: gunicorn --workers=3 --bind 0.0.0.0:8000 classify_prk.wsgi:application
+
+  nginx:
+    image: nginx:latest
+    container_name: predict_prk_nginx
+    restart: always
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./static:/app/static
+    ports:
+      - "80:80"
+    depends_on:
+      - web
