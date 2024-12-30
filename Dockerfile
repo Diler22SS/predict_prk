@@ -1,18 +1,12 @@
-# Используем базовый образ с Python 3.12
 FROM python:3.12-slim
 
-# Устанавливаем рабочую директорию
-WORKDIR /app
+# Запрещает Python записывать файлы pyc на диск
+ENV PYTHONDONTWRITEBYTECODE 1
+# Запрещает Python буферизовать stdout и stderr
+ENV PYTHONUNBUFFERED 1
 
-# Копируем requirements.txt и устанавливаем зависимости
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip
+COPY ./requirements.txt .
+RUN pip install -r requirements.txt
 
-# Копируем проект в контейнер
 COPY . .
-
-# Указываем порт, на котором будет работать приложение
-EXPOSE 8000
-
-# Команда запуска Gunicorn
-CMD ["gunicorn", "--workers=3", "--bind=0.0.0.0:8000", "classify_prk.wsgi:application"]
