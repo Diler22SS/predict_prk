@@ -4,7 +4,7 @@ from django import forms
 class BeforeDeliveryForm(forms.Form):
     # Врастание плаценты (1 или 0)
     placenta_previa = forms.ChoiceField(
-        label='Врастание плаценты, абс. (%)',
+        label='Врастание плаценты',
         choices=[(1, 'Да'), (0, 'Нет')],
         widget=forms.RadioSelect,
         required=True
@@ -12,7 +12,7 @@ class BeforeDeliveryForm(forms.Form):
 
     # Предлежание плаценты (1 или 0)
     indications_for_caesarean_1 = forms.ChoiceField(
-        label='Предлежание плаценты, абс. (%)',
+        label='Предлежание плаценты',
         choices=[(1, 'Да'), (0, 'Нет')],
         widget=forms.RadioSelect,
         required=True
@@ -20,7 +20,7 @@ class BeforeDeliveryForm(forms.Form):
 
     # Задняя стенка (1 или 0)
     placenta_localization_3 = forms.ChoiceField(
-        label='Локализация плаценты по задней стенке, абс. (%)',
+        label='Локализация плаценты по задней стенке',
         choices=[(1, 'Да'), (0, 'Нет')],
         widget=forms.RadioSelect,
         required=True
@@ -28,7 +28,7 @@ class BeforeDeliveryForm(forms.Form):
 
     # Кесарево сечение (1 или 0)
     delivery_2_0 = forms.ChoiceField(
-        label='Кесарево сечение, абс. (%)',
+        label='Кесарево сечение',
         choices=[(1, 'Да'), (0, 'Нет')],
         widget=forms.RadioSelect,
         required=True
