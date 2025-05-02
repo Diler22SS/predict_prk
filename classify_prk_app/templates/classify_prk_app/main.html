@@ -81,86 +81,59 @@
 <body>
     <h2>Выберите форму для прогнозирования ПРК</h2>
     <div>
-        <button onclick="showForm('before-delivery')">1 этап (при беременности)</button>
-        <button onclick="showForm('at-delivery')">2 этап (во время родоразрешения)</button>
+        <button onclick="showForm('wlab')">Модель на лабораторных данных</button>
+        <button onclick="showForm('wolab')">Модель на анамнестических данных</button>
     </div>
 
-    <!-- Форма для периода 1 -->
-    <div id="before-delivery-form-container" class="form-container">
-        <h3>Прогнозирование ПРК: 1 этап (при беременности)</h3>
-        <form id="before-delivery-form">
+    <!-- Форма для первой модели -->
+    <div id="wlab-form-container" class="form-container">
+        <h3>Прогнозирование ПРК: Модель на лабораторных данных</h3>
+        <form id="wlab-form">
             {% csrf_token %}
-            <p>
-                <label for="id_placenta_previa">Врастание плаценты</label>
-            </p>
-                {{ before_delivery_form.placenta_previa }}
-            <p>
-                <label for="id_indications_for_caesarean_1">Предлежание плаценты</label>
-            </p>
-                {{ before_delivery_form.indications_for_caesarean_1 }}
-            <p>
-                <label for="id_placenta_localization_3">Локализация плаценты по задней стенке</label>
-            </p>
-                {{ before_delivery_form.placenta_localization_3 }}
-            <p>
-                <label for="id_delivery_2_0">Кесарево сечение</label>
-            </p>
-                {{ before_delivery_form.delivery_2_0 }}
-            <p>
-                <label for="id_age">Возраст, лет</label>
-                {{ before_delivery_form.age }}
-            </p>
-            <p>
-                <label for="id_gestational_age">Срок беременности, недели</label>
-                {{ before_delivery_form.gestational_age }}
-            </p>
-            <p>
-                <label for="id_fibrinogen">Фибриноген, г/л</label>
-                {{ before_delivery_form.fibrinogen }}
-            </p>
+            {{ wlab_form.as_p }}
             <button type="submit" style="display: block; margin: 0 auto;">Отправить</button>
         </form>
-        <div id="before-delivery-loading" class="loading">Загрузка...</div>
-        <div id="before-delivery-result" class="result-container"></div>
+        <div id="wlab-loading" class="loading">Загрузка...</div>
+        <div id="wlab-result" class="result-container"></div>
     </div>
 
-    <!-- Форма для периода 2 -->
-    <div id="at-delivery-form-container" class="form-container">
-        <h3>Прогнозирование ПРК: 2 этап (во время родоразрешения)</h3>
-        <form id="at-delivery-form">
+    <!-- Форма для второй модели -->
+    <div id="wolab-form-container" class="form-container">
+        <h3>Прогнозирование ПРК: Модель на анамнестических данных</h3>
+        <form id="wolab-form">
             {% csrf_token %}
-            {{ at_delivery_form.as_p }}
+            {{ wolab_form.as_p }}
             <button type="submit" style="display: block; margin: 0 auto;">Отправить</button>
         </form>
-        <div id="at-delivery-loading" class="loading">Загрузка...</div>
-        <div id="at-delivery-result" class="result-container"></div>
+        <div id="wolab-loading" class="loading">Загрузка...</div>
+        <div id="wolab-result" class="result-container"></div>
     </div>
 
     <script>
         // Функция для показа нужной формы
         function showForm(formType) {
-            document.getElementById('before-delivery-form-container').style.display = 'none';
-            document.getElementById('at-delivery-form-container').style.display = 'none';
+            document.getElementById('wlab-form-container').style.display = 'none';
+            document.getElementById('wolab-form-container').style.display = 'none';
 
-            if (formType === 'before-delivery') {
-                document.getElementById('before-delivery-form-container').style.display = 'block';
-            } else if (formType === 'at-delivery') {
-                document.getElementById('at-delivery-form-container').style.display = 'block';
+            if (formType === 'wlab') {
+                document.getElementById('wlab-form-container').style.display = 'block';
+            } else if (formType === 'wolab') {
+                document.getElementById('wolab-form-container').style.display = 'block';
             }
         }
 
         // Показать первую форму по умолчанию
-        showForm('before-delivery');
+        showForm('wlab');
 
         // Обработчики отправки форм
-        document.getElementById('before-delivery-form').addEventListener('submit', function(event) {
+        document.getElementById('wlab-form').addEventListener('submit', function(event) {
             event.preventDefault();
-            classifyBeforeDelivery();
+            classifyWlab();
         });
 
-        document.getElementById('at-delivery-form').addEventListener('submit', function(event) {
+        document.getElementById('wolab-form').addEventListener('submit', function(event) {
             event.preventDefault();
-            classifyAtDelivery();
+            classifyWolab();
         });
 
         // Функция для отображения состояния загрузки
@@ -176,22 +149,20 @@
             resultDiv.className = 'result-container ' + ((isHigh) ? 'result-error' : 'result-success');
         }
 
-        // Функция классификации для периода 1 (до родоразрешения)
-        function classifyBeforeDelivery() {
+        // Функция классификации для первой модели
+        function classifyWlab() {
             const params = new URLSearchParams({
-                placenta_previa: document.querySelector('input[name="placenta_previa"]:checked')?.value,
-                indications_for_caesarean_1: document.querySelector('input[name="indications_for_caesarean_1"]:checked')?.value,
-                placenta_localization_3: document.querySelector('input[name="placenta_localization_3"]:checked')?.value,
-                delivery_2_0: document.querySelector('input[name="delivery_2_0"]:checked')?.value,
-                age: document.getElementById('id_age').value,
-                gestational_age: document.getElementById('id_gestational_age').value,
+                number_deliveries: document.getElementById('id_number_deliveries').value,
+                hemoglobin: document.getElementById('id_hemoglobin').value,
+                hematocrit: document.getElementById('id_hematocrit').value,
+                aptt: document.getElementById('id_aptt').value,
                 fibrinogen: document.getElementById('id_fibrinogen').value,
             });
 
-            toggleLoading('before-delivery-loading', true);
-            showResult('before-delivery-result', '', false, false);
+            toggleLoading('wlab-loading', true);
+            showResult('wlab-result', '', false, false);
 
-            fetch(`/classify_prk_before_delivery/?${params.toString()}`)
+            fetch(`/classify_prk_wlab/?${params.toString()}`)
                 .then(response => {
                     if (!response.ok) throw new Error("Ошибка сети");
                     return response.json();
@@ -199,31 +170,30 @@
                 .then(data => {
                     const probability = (data.probability[0][1] * 100).toFixed(2);
                     const isHigh = probability >= 70;
-                    showResult('before-delivery-result', `Вероятность ПРК: ${probability}%`, false, isHigh);
+                    showResult('wlab-result', `Вероятность ПРК: ${probability}%`, false, isHigh);
                 })
                 .catch(() => {
-                    showResult('before-delivery-result', "Ошибка. Проверьте данные.", true, true);
+                    showResult('wlab-result', "Ошибка. Проверьте данные.", true, true);
                 })
                 .finally(() => {
-                    toggleLoading('before-delivery-loading', false);
+                    toggleLoading('wlab-loading', false);
                 });
         }
 
-        // Функция классификации для периода 2 (во время родоразрешения)
-        function classifyAtDelivery() {
+        // Функция классификации для второй модели
+        function classifyWolab() {
             const params = new URLSearchParams({
-                bp_systolic: document.getElementById('id_bp_systolic').value,
-                heart_rate: document.getElementById('id_heart_rate').value,
-                hemoglobin: document.getElementById('id_hemoglobin').value,
-                hematocrit: document.getElementById('id_hematocrit').value,
-                thrombocytes: document.getElementById('id_thrombocytes').value,
-                prothrombin_index: document.getElementById('id_prothrombin_index').value,
+                age: document.getElementById('id_age').value,
+                cesarean_history: document.querySelector('input[name="cesarean_history"]:checked')?.value,
+                menarche: document.getElementById('id_menarche').value,
+                placenta_localization___2: document.querySelector('input[name="placenta_localization___2"]:checked')?.value,
+                caesarean_section_1_0: document.querySelector('input[name="caesarean_section_1_0"]:checked')?.value,
             });
 
-            toggleLoading('at-delivery-loading', true);
-            showResult('at-delivery-result', '', false, false);
+            toggleLoading('wolab-loading', true);
+            showResult('wolab-result', '', false, false);
 
-            fetch(`/classify_prk_at_delivery/?${params.toString()}`)
+            fetch(`/classify_prk_wolab/?${params.toString()}`)
                 .then(response => {
                     if (!response.ok) throw new Error("Ошибка сети");
                     return response.json();
@@ -231,13 +201,13 @@
                 .then(data => {
                     const probability = (data.probability[0][1] * 100).toFixed(2);
                     const isHigh = probability >= 70;
-                    showResult('at-delivery-result', `Вероятность ПРК: ${probability}%`, false, isHigh);
+                    showResult('wolab-result', `Вероятность ПРК: ${probability}%`, false, isHigh);
                 })
                 .catch(() => {
-                    showResult('at-delivery-result', "Ошибка. Проверьте данные.", true, true);
+                    showResult('wolab-result', "Ошибка. Проверьте данные.", true, true);
                 })
                 .finally(() => {
-                    toggleLoading('at-delivery-loading', false);
+                    toggleLoading('wolab-loading', false);
                 });
         }
     </script>

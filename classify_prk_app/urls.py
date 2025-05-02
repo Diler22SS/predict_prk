@@ -5,6 +5,6 @@ app_name = 'classify_prk_app'
 
 urlpatterns = [
     path('', views.MainView.as_view(), name='main'),
-    path('classify_prk_before_delivery/', views.PRKPredictionBeforeDeliveryView.as_view(), name='classify_prk_before_delivery'),
-    path('classify_prk_at_delivery/', views.PRKPredictionAtDeliveryView.as_view(), name='classify_prk_at_delivery'),
+    path('classify_prk_wlab/', views.PRKPredictionWlabView.as_view(), name='classify_prk_wlab'),
+    path('classify_prk_wolab/', views.PRKPredictionWolabView.as_view(), name='classify_prk_wolab'),
 ]
